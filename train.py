@@ -67,17 +67,20 @@ def test(model, data_loader):
             correct += pred.eq(target.view_as(pred)).sum().item()
 
     test_loss /= len(data_loader.dataset)
+    acc = 100. * correct / len(data_loader.dataset)
 
     print('Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
         test_loss, correct, len(data_loader.dataset),
         100. * correct / len(data_loader.dataset)))
+    
+    return test_loss, acc
 
 def main():
     # Training settings
     parser = argparse.ArgumentParser(description='For wesense task.')
     parser.add_argument('--batch_size', type=int, default=128, metavar='N',
                         help='input batch size for training (default: 128)')
-    parser.add_argument('--epochs', type=int, default=100, metavar='N',
+    parser.add_argument('--epochs', type=int, default=400, metavar='N',
                         help='number of epochs to train (default: 100)')
     parser.add_argument('--lr', type=float, default=3e-4, metavar='LR',
                         help='learning rate')
