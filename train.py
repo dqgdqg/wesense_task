@@ -13,6 +13,7 @@ from tqdm import tqdm
 import wandb
 
 wandb.init(project="wesense_task", entity="qgding")
+print(wandb.run.id)
 
 def train(model, train_loader, optimizer, epoch):
     model.train()
@@ -82,7 +83,7 @@ def main():
                         help='input batch size for training (default: 128)')
     parser.add_argument('--epochs', type=int, default=400, metavar='N',
                         help='number of epochs to train (default: 100)')
-    parser.add_argument('--lr', type=float, default=3e-4, metavar='LR',
+    parser.add_argument('--lr', type=float, default=3e-3, metavar='LR',
                         help='learning rate')
     parser.add_argument('--bn', action='store_true', default=True,
                         help='if bn')
@@ -111,6 +112,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
     # scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
+    best_valid_acc = 0.
     for epoch in range(1, args.epochs + 1):
         log = {}
         log['train_loss'], log['train_acc'] = train(model, train_loader, optimizer, epoch)
@@ -118,11 +120,12 @@ def main():
         log['test_loss'], log['test_acc'] = test(model, test_loader)
         wandb.log(log)
 
+        if log['valid_acc'] > best_valid_acc:
+            best_valid_acc = log['valid_acc']
+            torch.save(model.state_dict(), "saved_model/{}_best.pt".format(wandb.run.id))
         # scheduler.step()
 
-    # if args.save_model:
-    #     torch.save(model.state_dict(), "mnist_cnn.pt")
-
+    torch.save(model.state_dict(), "saved_model/{}_last.pt".format(wandb.run.id))
 
 if __name__ == '__main__':
     main()

@@ -5,7 +5,7 @@ import numpy as np
 
 np.random.seed(0)
 
-def xlsx_to_csv(root, name):
+def xlsx_to_df(root, name):
     xlsx_path = os.path.join(root, name)
     df = pd.read_excel(xlsx_path, index_col=0, engine='openpyxl')
 
@@ -22,18 +22,20 @@ def xlsx_to_csv(root, name):
 
     return df
 
-    csv_path = os.path.join(root, name.replace('.xlsx', '.csv'))
-    df = df.to_csv(csv_path)
-
 df_list = []
 
 for root, dirs, files in os.walk("./data", topdown=False):
     for name in files:
-        if '.xlsx' in name:
-            df = xlsx_to_csv(root, name)
+        if name.endswith('.xlsx'):
+            df = xlsx_to_df(root, name)
             df_list.append(df)
 
-df = pd.concat(df_list[:-1], ignore_index=True)
+df = pd.concat(df_list, ignore_index=True).fillna(0)
+
+# normalization
+
+for col in df.columns[:26]:
+    df[col] = (df[col] - df[col].mean()) / df[col].std()
 
 # get labels
 
@@ -41,11 +43,6 @@ labels = list(set(df['CONDITION'].to_list()))
 df['label'] = 0
 for i in range(len(df['CONDITION'])):
     df['label'][i] = labels.index(df['CONDITION'][i])
-
-# normalization
-
-for col in df.columns[:-4]:
-    df[col] = (df[col] - df[col].mean()) / df[col].std()
 
 # get train/valid/test split
 
@@ -65,4 +62,3 @@ train = train.to_csv('./data/train.csv')
 valid = valid.to_csv('./data/valid.csv')
 test = test.to_csv('./data/test.csv')
 
-embed()
